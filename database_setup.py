@@ -9,21 +9,21 @@ from sqlalchemy import create_engine
 Base = declarative_base()
 
 
-class Sport(Base):
-    __tablename__ = 'sport'
+class Catagory(Base):
+    __tablename__ = 'catagory'
 
     id = Column(Integer, primary_key=True)
     name = Column(String(250), nullable=False)
 
 
-class SportEquipment(Base):
-    __tablename__ = 'sport_equipment'
+class Item(Base):
+    __tablename__ = 'item'
 
     name = Column(String(80), nullable=False)
     id = Column(Integer, primary_key=True)
     description = Column(String(500))
-    sport_id = Column(Integer, ForeignKey('sport.id'))
-    sport = relationship(Sport)
+    catagory_id = Column(Integer, ForeignKey('catagory.id'))
+    catagory = relationship(Catagory)
 
     @property
     def serialize(self):
@@ -31,11 +31,11 @@ class SportEquipment(Base):
             'name' : self.name,
             'description' : self.description,
             'id' : self.id,
-            'sport_id' : self.sport_id,
+            'catagory_id' : self.catagory_id,
         }
 
 
-engine = create_engine('sqlite:///sportcatalog.db')
+engine = create_engine('sqlite:///catalog.db')
 
 
 Base.metadata.create_all(engine)

@@ -1,9 +1,9 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
  
-from database_setup import Restaurant, Base, MenuItem
+from database_setup import Base, Catagory, Item
  
-engine = create_engine('sqlite:///sportcatalog.db')
+engine = create_engine('sqlite:///catalog.db')
 # Bind the engine to the metadata of the Base class so that the
 # declaratives can be accessed through a DBSession instance
 Base.metadata.bind = engine
@@ -18,12 +18,12 @@ DBSession = sessionmaker(bind=engine)
 # session.rollback()
 session = DBSession()
 
-sport1 = Sport(name = "Swimming")
+sport1 = Catagory(name = "Swimming")
 
 session.add(sport1)
 session.commit()
 
-sportEquipment1 = SportEquipment(name = "Goggles", description = "Protect eyes from having contact with water", sport = sport1)
+sportEquipment1 = Item(name = "Goggles", description = "Protect eyes from having contact with water", catagory = sport1)
 
-session.add(menuItem2)
+session.add(sportEquipment1)
 session.commit()
