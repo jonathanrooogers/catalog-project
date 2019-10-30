@@ -1,0 +1,43 @@
+<html>
+<head>
+	<!––link to style sheet––>
+	</head>
+	<body>
+	<div class = 'pane'>
+		<div class = 'header'>
+		<h1>CATALOG</h1>
+	</div>
+
+
+
+</div>
+
+    {% for i in catalog %}
+    <div class = 'name'>
+		<span class = 'name'><p>{{i.name}}</p></span>
+
+    </div>
+    
+    {% endfor %}
+
+	{% for i in items %}
+    <div class = 'name'>
+        <span class = 'name'><p>{{i.name}}</p></span>
+        <span class = 'sportname'><p>{{i.catagory(name)}}</p></span>
+
+	</div>
+
+	{% endfor %}
+
+
+		
+		
+
+</div>
+</div>
+	</body>
+
+
+
+
+</html>

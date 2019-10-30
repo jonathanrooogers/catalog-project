@@ -18,6 +18,12 @@ def itemJSON(sport_name, item_name):
     equipment = session.query(Item).filter_by(name = item_name).one()
     return jsonify(Item=[equipment.serialize])
 
+@app.route('/')
+@app.route('/catalog')
+def catalog():
+    catalog = session.query(Catagory).all()
+    items = session.query(Item).all()
+    return render_template('homecatalog.html', catalog=catalog, items = items)
 
 
 
