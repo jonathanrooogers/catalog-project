@@ -1,43 +1,26 @@
-<html>
-<head>
-	<!––link to style sheet––>
-	</head>
-	<body>
-	<div class = 'pane'>
-		<div class = 'header'>
-		<h1>CATALOG</h1>
-	</div>
-
-
-
-</div>
-
-    {% for i in catalog %}
-    <div class = 'name'>
-		<span class = 'name'><p>{{i.name}}</p></span>
-
-    </div>
-    
+{% extends "main_layout.html" %}
+{% block content %}
+<h2> Categories </h2>
+{% if catalog != [] %}
+    <a href="{{url_for('newCategory')}}" >
+        <button>Create a New Catagory</button>
+    </a>
+    {% for c in catalog %}
+        <h3>{{c.name}}</h3>
+        <a href="{{url_for('viewitems', catagory_name=c.name, catagory_id = c.id)}}">
+             <button>Items</button>
+         </a>
+         <a href="{{url_for('editCatagory', catagory_name=c.name, catagory_id = c.id)}}">
+             <button>Edit</button>
+         </a>
+        <a href="{{url_for('deleteCatagory', catagory_name=c.name, catagory_id = c.id)}}">
+            <button>Delete</button>
+        </a>
     {% endfor %}
-
-	{% for i in items %}
-    <div class = 'name'>
-        <span class = 'name'><p>{{i.name}}</p></span>
-    
-
-	</div>
-
-	{% endfor %}
-
-
-		
-		
-
-</div>
-</div>
-	</body>
-
-
-
-
-</html>
+{% else %}
+    <p> There are no catagories at the moment... <p>
+    <a href="{{url_for('newCategory')}}" >
+        <button>Create a New Catagory</button>
+    </a>
+{% endif %}
+{% endblock %}

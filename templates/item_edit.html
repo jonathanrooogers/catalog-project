@@ -9,9 +9,9 @@
 	<br>
 	<br>
     <input type='submit' value='Edit'>
-	<a href='{{url_for('viewitems', catagory_name= catagory_name, catagory_id=catagory_id, item_id=item_id )}}'>
-        
-        <button>Cancel</button>
-	</a>
 </form>
+<a href="{{url_for('viewitems', catagory_name= catagory_name, catagory_id=catagory_id )}}">
+    <button>Cancel</button>
+</a>
+
 {% endblock %}

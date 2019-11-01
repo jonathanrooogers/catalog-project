@@ -46,7 +46,9 @@ def editCatagory(catagory_name,catagory_id):
     if request.method == 'POST':
         if request.form['name']:
             catagory.name = request.form['name']
-            return redirect(url_for('catalog'))
+        session.add(catagory)
+        session.commit()
+        return redirect(url_for('catalog'))
     else:
         return render_template('edit_category.html', catagory=catagory)
 
@@ -60,7 +62,7 @@ def deleteCatagory(catagory_name,catagory_id):
         session.commit()
 
 
-        return redirect(url_for('viewitems', catagory_id=catagory_id))
+        return redirect(url_for('catalog'))
     else:
         return render_template('delete_catagory.html', catagory=catagory)
 
@@ -104,12 +106,9 @@ def editItem(catagory_name,catagory_id, item_id):
         session.add(item)
         session.commit()
         
-        return redirect(url_for('viewitems', catagory_id=catagory_id))
+        return redirect(url_for('viewitems', catagory_name=catagory_name,  catagory_id=catagory_id))
     else:
-        return render_template('item_edit.html',
-                               catagory_id=catagory_id,
-                               item_id=item_id,
-                               item=item)
+        return render_template('item_edit.html', catagory_id=catagory_id, catagory_name = catagory_name, item_id=item_id, item=item)
 
 @app.route('/catalog/<string:catagory_name>/<int:catagory_id>/item/<int:item_id>/delete',
            methods=['GET', 'POST'])
@@ -133,4 +132,4 @@ def deleteItem(catagory_name,catagory_id, item_id):
 if __name__ == '__main__':
     app.secret_key= 'super_secret_key'
     app.debug = True
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, threaded = False)

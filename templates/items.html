@@ -2,7 +2,7 @@
 {% block content %}
 <h1>{{ catagory.name }}</h1>
 {% if items !=[] %}
-    <a href="{{url_for('newItem', catagory_name= catagory_name, catagory_id = catagory.id )}}">
+    <a href="{{url_for('newItem', catagory_name= catagory.name, catagory_id = catagory.id )}}">
         <button>Create New Item</button>
     </a>
     {% for i in items %}
