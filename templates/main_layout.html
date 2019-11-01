@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- CSS Framework: http://getskeleton.com/ -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Item Catalog</title>
+</head>
+<body>
+
+  <div class="container">
+    <div class="row">
+      <div class="one-half column" style="margin-top: 25%">
+
+
+  <header class="toolbar">
+    <h1><a href="/category">catagory</a></h1>
+    {% if not session.username %}
+        <h6><a href="/login"> Login </a> </h6>
+    {% else %}
+    <h6><a href="/gdisconnect">Logout</a></h6>
+    {% endif %}
+  </header>
+
+  <main>
+	
+    
+    {% block content %}
+    {% endblock %}
+  </main>
+
+
+  </div></div></div>
+
+</body>
+</html>
