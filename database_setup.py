@@ -35,7 +35,6 @@ class Item(Base):
     catagory_id = Column(Integer, ForeignKey('catagory.id'))
     catagory = relationship("Catagory", backref=backref("item", cascade="all, delete-orphan"))
 
-    catagory = relationship(Catagory)
 
     @property
     def serialize(self):
