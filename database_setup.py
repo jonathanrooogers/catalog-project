@@ -12,8 +12,16 @@ class User(Base):
     __tablename__ = 'user'
 
     id = Column(Integer, primary_key=True)
-    username = Column(String(40), index=true)
-    password_hash =  Column(String(64))
+    email = Column(String(200), unique = True)
+    name =  Column(String(64))
+
+    @property
+    def serialize(self):
+        return {
+            'id': self.id,
+            'email': self.email,
+            'name': self.name,
+        }
 
 
 class Catagory(Base):
@@ -21,13 +29,15 @@ class Catagory(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String(250), nullable=False)
+    user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    user = relationship(User)
 
     @property
     def serialize(self):
-        """Return object data"""
         return {
             'name': self.name,
             'id': self.id,
+            'user_id' : self.user_id,
         }
 
 
@@ -39,6 +49,8 @@ class Item(Base):
     description = Column(String(400))
     catagory_id = Column(Integer, ForeignKey('catagory.id'))
     catagory = relationship("Catagory", backref=backref("item", cascade="all, delete-orphan"))
+    user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    user = relationship(User)
 
 
     @property
@@ -48,6 +60,7 @@ class Item(Base):
             'description' : self.description,
             'id' : self.id,
             'catagory_id' : self.catagory_id,
+            'user_id' : self.user_id,
         }
 
 

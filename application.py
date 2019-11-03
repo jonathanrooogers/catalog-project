@@ -3,7 +3,7 @@
 from flask import Flask, make_response, render_template, request, redirect, url_for, flash, jsonify
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from database_setup import Base, Catagory, Item
+from database_setup import Base, User, Catagory, Item
 
 from flask import session as login_session
 import random, string
@@ -150,17 +150,17 @@ def timepass():
 
 @app.route('/gdisconnect')
 def gdisconnect():
-    credentials = login_session.get('credentials')
-    #print ('In gdisconnect access token is %s', access_token)
-    print ('User name is: ')
-    print (login_session['username'])
-    if credentials is None:
+    access_token = login_session['access_token']
+    print 'In gdisconnect access token is %s', access_token
+    print 'User name is: '
+    print login_session['username']
+    if access_token is None:
         print ('Access Token is None')
         response = make_response(
             json.dumps('Current user not connected.'), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
-    access_token = credentials.access_token
+    #access_token = credentials.access_token
     url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % login_session['access_token']
     h = httplib2.Http()
     result = \
@@ -179,7 +179,7 @@ def gdisconnect():
         response = make_response(json.dumps('Successfully disconnected.'), 200)
         response.headers['Content-Type'] = 'application/json'
         flash("Successfully logged out")
-        return redirect('/category')
+        return redirect('/catalog')
         # return response
     else:
         response = make_response(
