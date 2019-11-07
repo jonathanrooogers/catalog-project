@@ -107,6 +107,12 @@ def gconnect():
     login_session['picture'] = data['picture']
     login_session['email'] = data['email']
 
+    ##see if the user exist, if not create user
+    user_id = getUserID(login_session['email'])
+    if not user_id:
+        user_id = createUser(login_session)
+    login_session['user_id'] = user_id
+
 
     output = ''
     output += '<h1>Welcome, '
@@ -175,12 +181,12 @@ def gdisconnect():
         del login_session['username']
         del login_session['email']
         del login_session['picture']
-        del login_session['user_id']
+        #del login_session['user_id']
         response = make_response(json.dumps('Successfully disconnected.'), 200)
         response.headers['Content-Type'] = 'application/json'
         flash("Successfully logged out")
-        return redirect('/catalog')
-        # return response
+        #return redirect('/catalog')
+        return response
     else:
         response = make_response(
             json.dumps('Failed to revoke token for given user.', 400))
@@ -189,12 +195,41 @@ def gdisconnect():
 
 
 
+def createUser(login_session):
+    newUser = User(name=login_session['username'], email=login_session[
+                   'email'], picture=login_session['picture'])
+    session.add(newUser)
+    session.commit()
+    user = session.query(User).filter_by(email=login_session['email']).one()
+    return user.id
+
+
+def getUserInfo(user_id):
+    user = session.query(User).filter_by(id=user_id).one()
+    return user
+
+
+def getUserID(email):
+    try:
+        user = session.query(User).filter_by(email=email).one()
+        return user.id
+    except:
+        return None
 
 
 
 
 
+@app.route('/catalog/user/JSON')
+def userJSON():
+    user = session.query(User).all()
+    return jsonify(User=[i.serialize for i in user])
 
+
+@app.route('/catalog/JSON')
+def catagoryJSON():
+    catagory = session.query(Catagory).all()
+    return jsonify(Catagory=[i.serialize for i in catagory])
 
 
 @app.route('/catalog/<string:catagory_name>/<int:catagory_id>/<string:item_name>/<int:item_id>/JSON')
@@ -214,7 +249,7 @@ def catalog():
 def newCategory():
 
     if request.method == 'POST':
-        newCatagory = Catagory(name=request.form['name'])
+        newCatagory = Catagory(name=request.form['name'], user_id=login_session['user_id'])
         session.add(newCatagory)
         session.commit()
         return redirect(url_for('catalog'))
