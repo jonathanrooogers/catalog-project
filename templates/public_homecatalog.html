@@ -9,13 +9,7 @@
         <a href="{{url_for('viewitems', catagory_name=c.name, catagory_id = c.id)}}">
              <button>Items</button>
          </a>
-         <a href="{{url_for('editCatagory', catagory_name=c.name, catagory_id = c.id)}}">
-             <button>Edit</button>
-         </a>
-        <a href="{{url_for('deleteCatagory', catagory_name=c.name, catagory_id = c.id)}}">
-            <button>Delete</button>
-        </a>
-        
+         <br>
     {% endfor %}
 {% else %}
     <p> There are no catagories at the moment... <p>

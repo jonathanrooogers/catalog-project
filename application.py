@@ -26,7 +26,6 @@ DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
 
-
 @app.route('/login')
 def showLogin():
     state = ''.join(random.choice(string.ascii_uppercase + string.digits)
@@ -80,7 +79,6 @@ def gconnect():
     if result['issued_to'] != CLIENT_ID:
         response = make_response(
             json.dumps("Token's client ID does not match app's."), 401)
-        print "Token's client ID does not match app's."
         response.headers['Content-Type'] = 'application/json'
         return response
 
@@ -124,44 +122,12 @@ def gconnect():
     flash("you are now logged in as %s" % login_session['username'])
     return output
 
- 
-
-@app.route('/timepass')
-def timepass():
-    # query user
-    print '\n\ncategory:'
-    categories = session.query(Category).all()
-    for category in categories:
-        print "\nid: " + str(category.id)
-        print "name: " + category.name
-        print "user_id: " + str(category.user_id)
-
-    print '\n\nitems:'
-    items = session.query(Item).all()
-    for item in items:
-        print "\nid: " + str(item.id)
-        print "name: " + item.name
-        print "category id: " + str(item.category_id)
-        print "user_id: " + str(item.user_id)
-
-    print '\n\nusers:'
-    users = session.query(User).all()
-    for user in users:
-        print "\nid: " + str(user.id)
-        print "name: " + user.name
-        print "email id: " + str(user.email)
-
-    return ""
 
 
 @app.route('/gdisconnect')
 def gdisconnect():
     access_token = login_session['access_token']
-    print 'In gdisconnect access token is %s', access_token
-    print 'User name is: '
-    print login_session['username']
     if access_token is None:
-        print ('Access Token is None')
         response = make_response(
             json.dumps('Current user not connected.'), 401)
         response.headers['Content-Type'] = 'application/json'
@@ -172,9 +138,7 @@ def gdisconnect():
     result = \
         h.request(uri=url, method='POST', body=None, headers={'content-type': 'application/x-www-form-urlencoded'})[0]
 
-    print (url)
-    print ('result is ')
-    print (result)
+    
     if result['status'] == '200':
         del login_session['access_token']
         del login_session['gplus_id']
@@ -185,8 +149,7 @@ def gdisconnect():
         response = make_response(json.dumps('Successfully disconnected.'), 200)
         response.headers['Content-Type'] = 'application/json'
         flash("Successfully logged out")
-        #return redirect('/catalog')
-        return response
+        return redirect(url_for('catalog'))
     else:
         response = make_response(
             json.dumps('Failed to revoke token for given user.', 400))
@@ -242,16 +205,23 @@ def itemJSON(catagory_name, item_name,catagory_id,item_id):
 def catalog():
     catalog = session.query(Catagory).all()
     items = session.query(Item).all()
-    return render_template('homecatalog.html', catalog=catalog, items = items)
+    if 'username' not in login_session:
+        return render_template('public_homecatalog.html', catalog=catalog, items = items)
+    else:
+        return render_template('homecatalog.html', catalog=catalog, items = items)
 
 
 @app.route('/catalog/new/', methods=['GET', 'POST'])
 def newCategory():
 
+    if 'username' not in login_session:
+        return redirect('/login')
+
     if request.method == 'POST':
         newCatagory = Catagory(name=request.form['name'], user_id=login_session['user_id'])
         session.add(newCatagory)
         session.commit()
+        flash("new catagory has been created")
         return redirect(url_for('catalog'))
     else:
         return render_template('new_catagory.html')
@@ -261,26 +231,37 @@ def newCategory():
 def editCatagory(catagory_name,catagory_id):
 
     catagory = session.query(Catagory).filter_by(id=catagory_id).one()
+    if 'username' not in login_session:
+        return redirect('/login')
+    if catagory.user_id != login_session['user_id']:
+        flash("You are not authorised to delete this")
+        return redirect(url_for('catalog'))
+
 
     if request.method == 'POST':
         if request.form['name']:
             catagory.name = request.form['name']
         session.add(catagory)
         session.commit()
+        flash("Catalog has been edited")
         return redirect(url_for('catalog'))
     else:
         return render_template('edit_category.html', catagory=catagory)
 
 @app.route('/catalog/<string:catagory_name>/<int:catagory_id>/delete/', methods=['GET', 'POST'])
 def deleteCatagory(catagory_name,catagory_id):
-        
-    catagory = session.query(Catagory).filter_by(id=catagory_id).one()
 
+    catagory = session.query(Catagory).filter_by(id=catagory_id).one()
+    if 'username' not in login_session:
+        return redirect('/login')
+    if catagory.user_id != login_session['user_id']:
+        flash("You are not authorised to delete this")
+        return redirect(url_for('catalog'))
+        
     if request.method == 'POST':
         session.delete(catagory)
         session.commit()
-
-
+        flash("catagory has been deleted")
         return redirect(url_for('catalog'))
     else:
         return render_template('delete_catagory.html', catagory=catagory)
@@ -290,20 +271,28 @@ def deleteCatagory(catagory_name,catagory_id):
 def viewitems(catagory_name,catagory_id):
     catagory = session.query(Catagory).filter_by(id=catagory_id).one()
     items = session.query(Item).filter_by(catagory_id=catagory_id)
-    return render_template('items.html', items=items, catagory=catagory)
+    creator = getUserInfo(catagory.user_id)
+
+    if 'username' not in login_session or creator.id != login_session['user_id']:
+        return render_template('public_items.html', items=items, catagory=catagory)
+    else:
+        return render_template('items.html', items=items, catagory=catagory)
 
 
 @app.route('/catalog/<string:catagory_name>/<int:catagory_id>/item/new', methods=['GET', 'POST'])
 def newItem(catagory_name,catagory_id):
-    
+
+    if 'username' not in login_session:
+        return redirect('/login')
 
     if request.method == 'POST':
         newItem = Item(name=request.form['name'],
                        description=request.form['description'],
-                       catagory_id=catagory_id)
+                       catagory_id=catagory_id,
+                       user_id=login_session['user_id'])
         session.add(newItem)
         session.commit()
-        
+        flash("New item added!")
         return redirect(url_for('viewitems',catagory_name= catagory_name, catagory_id=catagory_id))
     else:
         return render_template('item_new.html',catagory_name= catagory_name, catagory_id=catagory_id)
@@ -317,6 +306,14 @@ def editItem(catagory_name,catagory_id, item_id):
    
     item = session.query(Item).filter_by(id=item_id).one()
 
+    if 'username' not in login_session:
+        return redirect('/login')
+    if item.user_id != login_session['user_id']:
+        flash("You are not authorised to delete this")
+        return redirect(url_for('viewitems', catagory_name=catagory_name, catagory_id=catagory_id))
+    
+
+
     if request.method == 'POST':
         if request.form['name']:
             item.name = request.form['name']
@@ -324,7 +321,7 @@ def editItem(catagory_name,catagory_id, item_id):
             item.description = request.form['description']
         session.add(item)
         session.commit()
-        
+        flash("item has been edited")
         return redirect(url_for('viewitems', catagory_name=catagory_name,  catagory_id=catagory_id))
     else:
         return render_template('item_edit.html', catagory_id=catagory_id, catagory_name = catagory_name, item_id=item_id, item=item)
@@ -335,11 +332,17 @@ def deleteItem(catagory_name,catagory_id, item_id):
     
     item = session.query(Item).filter_by(id=item_id).one()
 
+    if 'username' not in login_session:
+        return redirect('/login')
+    if item.user_id != login_session['user_id']:
+        flash("You are not authorised to delete this")
+        return redirect(url_for('viewitems', catagory_name=catagory_name, catagory_id=catagory_id))
+    
 
     if request.method == 'POST':
         session.delete(item)
         session.commit()
-        
+        flash("Item has been deleted")
         return redirect(url_for('viewitems', catagory_name=catagory_name, catagory_id=catagory_id))
     else:
         return render_template('delete_item.html',
