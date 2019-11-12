@@ -1,13 +1,14 @@
 # Catalog project for Udacity
 
-from flask import Flask, make_response, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, make_response, render_template
+from flask import request, redirect, url_for, flash, jsonify
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base, User, Catagory, Item
 
 from flask import session as login_session
-import random, string
-
+import random
+import string
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError
 import httplib2
@@ -105,23 +106,18 @@ def gconnect():
     login_session['picture'] = data['picture']
     login_session['email'] = data['email']
 
-    ##see if the user exist, if not create user
     user_id = getUserID(login_session['email'])
     if not user_id:
         user_id = createUser(login_session)
     login_session['user_id'] = user_id
 
-
     output = ''
     output += '<h1>Welcome, '
     output += login_session['username']
     output += '!</h1>'
-    output += '<img src="'
-    output += login_session['picture']
-    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
+    output += ''
     flash("you are now logged in as %s" % login_session['username'])
     return output
-
 
 
 @app.route('/gdisconnect')
@@ -132,20 +128,19 @@ def gdisconnect():
             json.dumps('Current user not connected.'), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
-    #access_token = credentials.access_token
-    url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % login_session['access_token']
+    url = ('https://accounts.google.com/o/oauth2/revoke?token=%s'
+           % login_session['access_token'])
     h = httplib2.Http()
     result = \
-        h.request(uri=url, method='POST', body=None, headers={'content-type': 'application/x-www-form-urlencoded'})[0]
+        h.request(uri=url, method='POST', body=None,
+                   headers={'content-type':'application/x-www-form-urlencoded'})[0]
 
-    
     if result['status'] == '200':
         del login_session['access_token']
         del login_session['gplus_id']
         del login_session['username']
         del login_session['email']
         del login_session['picture']
-        #del login_session['user_id']
         response = make_response(json.dumps('Successfully disconnected.'), 200)
         response.headers['Content-Type'] = 'application/json'
         flash("Successfully logged out")
@@ -155,7 +150,6 @@ def gdisconnect():
             json.dumps('Failed to revoke token for given user.', 400))
         response.headers['Content-Type'] = 'application/json'
         return response
-
 
 
 def createUser(login_session):
@@ -180,9 +174,6 @@ def getUserID(email):
         return None
 
 
-
-
-
 @app.route('/catalog/user/JSON')
 def userJSON():
     user = session.query(User).all()
@@ -195,10 +186,12 @@ def catagoryJSON():
     return jsonify(Catagory=[i.serialize for i in catagory])
 
 
-@app.route('/catalog/<string:catagory_name>/<int:catagory_id>/<string:item_name>/<int:item_id>/JSON')
-def itemJSON(catagory_name, item_name,catagory_id,item_id):
-    equipment = session.query(Item).filter_by(name = item_name).one()
+@app.route("/catalog/<string:catagory_name>/<int:catagory_id>/"
+           "<string:item_name>/<int:item_id>/JSON")
+def itemJSON(catagory_name, item_name, catagory_id, item_id):
+    equipment = session.query(Item).filter_by(name=item_name).one()
     return jsonify(Item=[equipment.serialize])
+
 
 @app.route('/')
 @app.route('/catalog')
@@ -206,9 +199,11 @@ def catalog():
     catalog = session.query(Catagory).all()
     items = session.query(Item).all()
     if 'username' not in login_session:
-        return render_template('public_homecatalog.html', catalog=catalog, items = items)
+        return render_template('public_homecatalog.html', catalog=catalog,
+                               items=items)
     else:
-        return render_template('homecatalog.html', catalog=catalog, items = items)
+        return render_template('homecatalog.html', catalog=catalog,
+                               items=items)
 
 
 @app.route('/catalog/new/', methods=['GET', 'POST'])
@@ -218,7 +213,8 @@ def newCategory():
         return redirect('/login')
 
     if request.method == 'POST':
-        newCatagory = Catagory(name=request.form['name'], user_id=login_session['user_id'])
+        newCatagory = Catagory(name=request.form['name'],
+                               user_id=login_session['user_id'])
         session.add(newCatagory)
         session.commit()
         flash("new catagory has been created")
@@ -227,8 +223,9 @@ def newCategory():
         return render_template('new_catagory.html')
 
 
-@app.route('/catalog/<string:catagory_name>/<int:catagory_id>/edit/', methods=['GET', 'POST'])
-def editCatagory(catagory_name,catagory_id):
+@app.route('/catalog/<string:catagory_name>/<int:catagory_id>/edit/',
+           methods=['GET', 'POST'])
+def editCatagory(catagory_name, catagory_id):
 
     catagory = session.query(Catagory).filter_by(id=catagory_id).one()
     if 'username' not in login_session:
@@ -236,7 +233,6 @@ def editCatagory(catagory_name,catagory_id):
     if catagory.user_id != login_session['user_id']:
         flash("You are not authorised to delete this")
         return redirect(url_for('catalog'))
-
 
     if request.method == 'POST':
         if request.form['name']:
@@ -248,8 +244,10 @@ def editCatagory(catagory_name,catagory_id):
     else:
         return render_template('edit_category.html', catagory=catagory)
 
-@app.route('/catalog/<string:catagory_name>/<int:catagory_id>/delete/', methods=['GET', 'POST'])
-def deleteCatagory(catagory_name,catagory_id):
+
+@app.route('/catalog/<string:catagory_name>/<int:catagory_id>/delete/',
+           methods=['GET', 'POST'])
+def deleteCatagory(catagory_name, catagory_id):
 
     catagory = session.query(Catagory).filter_by(id=catagory_id).one()
     if 'username' not in login_session:
@@ -257,7 +255,7 @@ def deleteCatagory(catagory_name,catagory_id):
     if catagory.user_id != login_session['user_id']:
         flash("You are not authorised to delete this")
         return redirect(url_for('catalog'))
-        
+
     if request.method == 'POST':
         session.delete(catagory)
         session.commit()
@@ -266,21 +264,25 @@ def deleteCatagory(catagory_name,catagory_id):
     else:
         return render_template('delete_catagory.html', catagory=catagory)
 
+
 @app.route('/catalog/<string:catagory_name>/<int:catagory_id>')
 @app.route('/catalog/<string:catagory_name>/<int:catagory_id>/item/')
-def viewitems(catagory_name,catagory_id):
+def viewitems(catagory_name, catagory_id):
     catagory = session.query(Catagory).filter_by(id=catagory_id).one()
     items = session.query(Item).filter_by(catagory_id=catagory_id)
     creator = getUserInfo(catagory.user_id)
 
-    if 'username' not in login_session or creator.id != login_session['user_id']:
-        return render_template('public_items.html', items=items, catagory=catagory)
+    if ('username' not in login_session or
+       creator.id != login_session['user_id']):
+            return render_template('public_items.html', items=items,
+                                   catagory=catagory)
     else:
         return render_template('items.html', items=items, catagory=catagory)
 
 
-@app.route('/catalog/<string:catagory_name>/<int:catagory_id>/item/new', methods=['GET', 'POST'])
-def newItem(catagory_name,catagory_id):
+@app.route('/catalog/<string:catagory_name>/<int:catagory_id>/item/new',
+           methods=['GET', 'POST'])
+def newItem(catagory_name, catagory_id):
 
     if 'username' not in login_session:
         return redirect('/login')
@@ -293,26 +295,28 @@ def newItem(catagory_name,catagory_id):
         session.add(newItem)
         session.commit()
         flash("New item added!")
-        return redirect(url_for('viewitems',catagory_name= catagory_name, catagory_id=catagory_id))
+        return redirect(url_for('viewitems', catagory_name=catagory_name,
+                                catagory_id=catagory_id))
     else:
-        return render_template('item_new.html',catagory_name= catagory_name, catagory_id=catagory_id)
+        return render_template('item_new.html', catagory_name=catagory_name,
+                               catagory_id=catagory_id)
 
-    return render_template('item_new.html', catagory_name= catagory_name, catagory_id=catagory_id)
+    return render_template('item_new.html', catagory_name=catagory_name,
+                           catagory_id=catagory_id)
 
 
-@app.route('/catalog/<string:catagory_name>/<int:catagory_id>/item/<int:item_id>/edit',
-           methods=['GET', 'POST'])
-def editItem(catagory_name,catagory_id, item_id):
-   
+@app.route("/catalog/<string:catagory_name>/<int:catagory_id>/item/"
+           "<int:item_id>/edit", methods=['GET', 'POST'])
+def editItem(catagory_name, catagory_id, item_id):
+
     item = session.query(Item).filter_by(id=item_id).one()
 
     if 'username' not in login_session:
         return redirect('/login')
     if item.user_id != login_session['user_id']:
         flash("You are not authorised to delete this")
-        return redirect(url_for('viewitems', catagory_name=catagory_name, catagory_id=catagory_id))
-    
-
+        return redirect(url_for('viewitems', catagory_name=catagory_name,
+                                catagory_id=catagory_id))
 
     if request.method == 'POST':
         if request.form['name']:
@@ -322,28 +326,33 @@ def editItem(catagory_name,catagory_id, item_id):
         session.add(item)
         session.commit()
         flash("item has been edited")
-        return redirect(url_for('viewitems', catagory_name=catagory_name,  catagory_id=catagory_id))
+        return redirect(url_for('viewitems', catagory_name=catagory_name,
+                                catagory_id=catagory_id))
     else:
-        return render_template('item_edit.html', catagory_id=catagory_id, catagory_name = catagory_name, item_id=item_id, item=item)
+        return render_template('item_edit.html', catagory_id=catagory_id,
+                               catagory_name=catagory_name,
+                               item_id=item_id, item=item)
 
-@app.route('/catalog/<string:catagory_name>/<int:catagory_id>/item/<int:item_id>/delete',
-           methods=['GET', 'POST'])
-def deleteItem(catagory_name,catagory_id, item_id):
-    
+
+@app.route('/catalog/<string:catagory_name>/<int:catagory_id>'
+           '/item/<int:item_id>/delete', methods=['GET', 'POST'])
+def deleteItem(catagory_name, catagory_id, item_id):
+
     item = session.query(Item).filter_by(id=item_id).one()
 
     if 'username' not in login_session:
         return redirect('/login')
     if item.user_id != login_session['user_id']:
         flash("You are not authorised to delete this")
-        return redirect(url_for('viewitems', catagory_name=catagory_name, catagory_id=catagory_id))
-    
+        return redirect(url_for('viewitems', catagory_name=catagory_name,
+                                catagory_id=catagory_id))
 
     if request.method == 'POST':
         session.delete(item)
         session.commit()
         flash("Item has been deleted")
-        return redirect(url_for('viewitems', catagory_name=catagory_name, catagory_id=catagory_id))
+        return redirect(url_for('viewitems', catagory_name=catagory_name,
+                                catagory_id=catagory_id))
     else:
         return render_template('delete_item.html',
                                catagory_name=catagory_name,
@@ -352,6 +361,6 @@ def deleteItem(catagory_name,catagory_id, item_id):
 
 
 if __name__ == '__main__':
-    app.secret_key= 'super_secret_key'
+    app.secret_key = 'super_secret_key'
     app.debug = True
-    app.run(host='0.0.0.0', port=5000, threaded = False)
+    app.run(host='0.0.0.0', port=5000, threaded=False)

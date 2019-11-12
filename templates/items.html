@@ -16,7 +16,6 @@
             <button>Delete</button>
         </a>
         <br>
-        <br>
     {% endfor %}
 {% else %}
     <p> No item in {{category.name}} exist <p>
@@ -24,7 +23,6 @@
         <button>Create New Item</button>
     </a>
 {% endif %}
-<br>
 <br>
 <a href='{{url_for('catalog')}}'><button> Cancel </button></a>
 {% endblock %}

@@ -8,12 +8,13 @@ from sqlalchemy import create_engine
 
 Base = declarative_base()
 
+
 class User(Base):
     __tablename__ = 'user'
 
     id = Column(Integer, primary_key=True)
-    email = Column(String(200), unique = True)
-    name =  Column(String(64))
+    email = Column(String(200), unique=True)
+    name = Column(String(64))
     picture = Column(String)
 
     @property
@@ -39,7 +40,7 @@ class Catagory(Base):
         return {
             'name': self.name,
             'id': self.id,
-            'user_id' : self.user_id,
+            'user_id': self.user_id,
         }
 
 
@@ -50,19 +51,20 @@ class Item(Base):
     id = Column(Integer, primary_key=True)
     description = Column(String(400))
     catagory_id = Column(Integer, ForeignKey('catagory.id'))
-    catagory = relationship("Catagory", backref=backref("item", cascade="all, delete-orphan"))
+    catagory = relationship("Catagory",
+                            backref=backref("item",
+                                            cascade="all, delete-orphan"))
     user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
     user = relationship(User)
-
 
     @property
     def serialize(self):
         return{
-            'name' : self.name,
-            'description' : self.description,
-            'id' : self.id,
-            'catagory_id' : self.catagory_id,
-            'user_id' : self.user_id,
+            'name': self.name,
+            'description': self.description,
+            'id': self.id,
+            'catagory_id': self.catagory_id,
+            'user_id': self.user_id,
         }
 
 

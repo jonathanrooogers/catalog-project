@@ -1,13 +1,13 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
- 
+
 from database_setup import Base, User, Catagory, Item
- 
+
 engine = create_engine('sqlite:///catalog.db')
 # Bind the engine to the metadata of the Base class so that the
 # declaratives can be accessed through a DBSession instance
 Base.metadata.bind = engine
- 
+
 DBSession = sessionmaker(bind=engine)
 # A DBSession() instance establishes all conversations with the database
 # and represents a "staging zone" for all the objects loaded into the
@@ -18,15 +18,18 @@ DBSession = sessionmaker(bind=engine)
 # session.rollback()
 session = DBSession()
 
-user1 = User(email = "jono-@hotmail.com", name ="Jonathan")
+user1 = User(email="jono-@hotmail.com", name="Jonathan")
 
 
-sport1 = Catagory(name = "Swimming", user = user1)
+sport1 = Catagory(name="Swimming", user=user1)
 
 session.add(sport1)
 session.commit()
 
-sportEquipment1 = Item(name = "Goggles", description = "Protect eyes from having contact with water", catagory = sport1, user = user1)
+sportEquipment1 = Item(name="Goggles",
+                       description=("Protect eyes from having"
+                                    "contact with water"),
+                       catagory=sport1, user=user1)
 
 session.add(sportEquipment1)
 session.commit()
